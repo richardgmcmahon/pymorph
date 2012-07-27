@@ -1,8 +1,8 @@
 import pyfits,os
 import numpy as n
-import config as c
 import numpy.ma as ma
-from flagfunc import *
+import ndimage as im
+import config as c
 
 class BkgdFunc:
     "The class which will provide the blank sky region and sky deviation to the casgm class and the sky sigma will also be used when the pipeline decide the fit is good or bad"
@@ -22,7 +22,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
     ycntr = ycntr-1
     angle = c.angle
     back_extraction_radius = c.back_extraction_radius
-    f = pyfits.open(c.datadir +cutimage)
+    f = pyfits.open(cutimage)
     z = f[0].data
     header = f[0].header
     if (header.has_key('sky')):
@@ -47,7 +47,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
         bgmask = n.swapaxes(bgmask, 0, 1)
         bgmaskedgalaxy = ma.masked_array(z, bgmask)
         bgmaskedgalaxy1d = bgmaskedgalaxy.compressed()
-        skysig = ma.std(bgmaskedgalaxy1d)
+        skysig = im.standard_deviation(bgmaskedgalaxy1d)
         sky_iter = ma.average(bgmaskedgalaxy1d)
         skysig_iter = skysig * 1.5
         x = n.reshape(n.arange(nxpts * nypts),(nxpts, nypts)) / nypts
@@ -88,7 +88,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
 #            print countback
             if countback == 3 and FLAG_BACK1 == 0:
                 FLAG_BACK1 = 1
-                c.Flag += 2**GetFlag('BACK_FAILED')
+                c.Flag += 1048576
             countback += 1
     os.system('rm -f BackMask.fits')
     BackMask = n.swapaxes(BackMask, 0, 1)

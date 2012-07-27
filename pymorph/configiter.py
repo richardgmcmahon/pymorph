@@ -5,8 +5,6 @@ import config as c
 from os.path import exists
 from numpy import log10
 from readlog import ReadLog
-from runsexfunc import *
-from flagfunc import *
 
 class ConfigIter:
     """The class making configuration file for GALFIT. The configuration file 
@@ -29,9 +27,8 @@ class ConfigIter:
 		
 
 def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
-    RunSex(cutimage, whtimage, 'TEMP.SEX.cat', 9999, 9999, 0)
     imagefile = c.imagefile
-    sex_cata = 'TEMP.SEX.cat'
+    sex_cata = c.sex_cata
     threshold = c.threshold
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg
@@ -42,10 +39,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     if len(ComP) == 0:
         ComP = ['bulge', 'disk']
     values = line_s.split()
-    outfile   = 'O_' + c.fstring + '.fits'
-    mask_file = 'M_' + c.fstring + '.fits'
-    config_file = 'G_' + c.fstring + '.in' #Name of the GALFIT configuration file
-    constrain_file = c.fstring + '.con'
+    outfile   = 'O_' + str(cutimage)[:-5] + '.fits'
+    mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
+    config_file = 'G_' + str(cutimage)[:-5] + '.in' #Name of the GALFIT configuration file
+    constrain_file = str(cutimage)[:-5] + '.con'
     try:
 	c.center_constrain = c.center_constrain
     except:
@@ -65,23 +62,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f_constrain.write(str(cO) + '      re     ' + str(c.LRe) +\
                           ' to ' + str(c.URe) + '\n')
         f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
-        f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
-        f_constrain.close()
-    def BarConstrain(constrain_file, cO):
-        f_constrain = open(constrain_file, 'ab')
-        f_constrain.write(str(cO) + '      n      ' + str('0.1') + \
-                          ' to ' + str('2.2') +  '\n')
-        f_constrain.write(str(cO) + '      x      ' + \
-                          str(-c.center_constrain) + '     ' + \
-                          str(c.center_constrain) + '\n')
-        f_constrain.write(str(cO) + '      y      ' + \
-                          str(-c.center_constrain) + '     ' + \
-                          str(c.center_constrain) + '\n')
-        f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
-                          ' to ' + str(c.LMag) + '\n')
-        f_constrain.write(str(cO) + '      re     ' + str(c.LRe) +\
-                          ' to ' + str(c.URe) + '\n')
-        f_constrain.write(str(cO) + '      q       0.0 to 0.5\n')
         f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
         f_constrain.close()
 
@@ -110,8 +90,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f_constrain.write(str(cO) + '      pa    -360.0 to 360.0\n')
         f_constrain.close()
 
-    xcntr_o  = xcntr #float(values[1]) #x center of the object
-    ycntr_o  = ycntr #float(values[2]) #y center of the object
+    xcntr_o  = float(values[1]) #x center of the object
+    ycntr_o  = float(values[2]) #y center of the object
     mag    = float(values[7]) #Magnitude
     radius = float(values[9]) #Half light radius
     mag_zero = c.mag_zero #magnitude zero point
@@ -124,7 +104,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     #Add components
     AdComp = 1
     if 'bulge' in ComP:
-        c.Flag += 2**GetFlag('FIT_BULGE')
+        c.Flag += 512
         ParamDict[AdComp] = {}
         #Bulge Parameters
         ParamDict[AdComp][1] = 'sersic'
@@ -138,23 +118,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         ParamDict[AdComp][9] = 0
         ParamDict[AdComp][11] = 'Main'
         AdComp += 1
-    if 'bar' in ComP:
-#        c.Flag += 2**GetFlag('FIT_BULGE')
-        ParamDict[AdComp] = {}
-        #Bulge Parameters
-        ParamDict[AdComp][1] = 'bar'
-        ParamDict[AdComp][2] = [xcntr_o, ycntr_o]
-        ParamDict[AdComp][3] = mag + 2.5 * log10(2.0)
-        ParamDict[AdComp][4] = radius
-        ParamDict[AdComp][5] = 0.5
-        ParamDict[AdComp][6] = 0.3
-        ParamDict[AdComp][7] = pos_ang
-        ParamDict[AdComp][8] = 0
-        ParamDict[AdComp][9] = 0
-        ParamDict[AdComp][11] = 'Main'
-        AdComp += 1
     if 'disk' in ComP:
-        c.Flag += 2**GetFlag('FIT_DISK')
+        c.Flag += 1024
         #Disk parameters
         ParamDict[AdComp] = {}
         ParamDict[AdComp][1] = 'expdisk'
@@ -183,8 +148,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             area_n = float(values[13]) # neighbour area
             maj_axis = float(values[14])#major axis of neighbour
             NotFitNeigh = 0
-            if abs(xcntr_n - xcntr_o) > NXPTS / 2.0 + c.avoidme or \
-               abs(ycntr_n - ycntr_o) > NYPTS / 2.0 + c.avoidme:
+            if abs(xcntr_n - xcntr_o) > NXPTS / 2.0 + c.avoideme or \
+               abs(ycntr_n - ycntr_o) > NYPTS / 2.0 + c.avoideme:
                 NotFitNeigh = 1
             if(abs(xcntr_n - xcntr_o) <= (major_axis + maj_axis) * \
                threshold and \
@@ -217,7 +182,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             pass
     f_constrain.close()
     if isneighbour:
-        c.Flag  += 2**GetFlag('NEIGHBOUR_FIT')
+        c.Flag  += 4096
     #Sky component
     ParamDict[AdComp] = {}
     ParamDict[AdComp][1] = 'sky'
@@ -296,22 +261,15 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
-                    FitDict[i][5] = 1       
-                    FitDict[i][6] = 1   
-                if ParamDict[i][1] == 'bar' and ParamDict[i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
-                    FitDict[i][5] = 1       
-                    FitDict[i][6] = 1    
+                    FitDict[i][4] = 0
+                    FitDict[i][5] = 0       
+                    FitDict[i][6] = 0    
                 if ParamDict[i][1] == 'expdisk' and ParamDict[i][11] == 'Main':
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 1       
-                    FitDict[i][5] = 1    
+                    FitDict[i][4] = 0       
+                    FitDict[i][5] = 0    
                 if ParamDict[i][1] == 'sky':
                     FitDict[i][1] = 1
                     FitDict[i][2] = 0 
@@ -356,25 +314,18 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                 i = j + 1
                 FitDict[i] = {}  
                 if ParamDict[i][1] == 'sersic' and ParamDict[i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
-                    FitDict[i][5] = 1       
-                    FitDict[i][6] = 1
-                if ParamDict[i][1] == 'bar' and ParamDict[i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
-                    FitDict[i][5] = 1       
-                    FitDict[i][6] = 1    
+                    FitDict[i][1] = [0, 0]
+                    FitDict[i][2] = 0 
+                    FitDict[i][3] = 0 
+                    FitDict[i][4] = 0
+                    FitDict[i][5] = 0       
+                    FitDict[i][6] = 0    
                 if ParamDict[i][1] == 'expdisk' and ParamDict[i][11] == 'Main':
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 1       
-                    FitDict[i][5] = 1    
+                    FitDict[i][4] = 0       
+                    FitDict[i][5] = 0    
                 if ParamDict[i][1] == 'sky':
                     FitDict[i][1] = 1
                     FitDict[i][2] = 0 
@@ -394,22 +345,15 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
+                    FitDict[i][4] = 0
                     FitDict[i][5] = 1       
-                    FitDict[i][6] = 1   
-                if ParamDict[i][1] == 'bar' and ParamDict[i][11] == 'Main':
+                    FitDict[i][6] = 1    
+                if ParamDict[i][1] == 'expdisk' and ParamDict[i][11] == 'Main':
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
-                    FitDict[i][5] = 0       
-                    FitDict[i][6] = 0    
-                if ParamDict[i][1] == 'expdisk' and ParamDict[i][11] == 'Main':
-                    FitDict[i][1] = [0, 0]
-                    FitDict[i][2] = 0 
-                    FitDict[i][3] = 0 
-                    FitDict[i][4] = 0       
-                    FitDict[i][5] = 0    
+                    FitDict[i][4] = 1       
+                    FitDict[i][5] = 1    
                 if ParamDict[i][1] == 'sky':
                     FitDict[i][1] = 1
                     FitDict[i][2] = 0 
@@ -425,7 +369,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 
 
     #Write configuration file. RunNo is the number of iteration
-    for RunNo in range(3):
+    for RunNo in range(4):
         f_constrain = open(constrain_file, 'w')
         f_constrain.close()
         f=open(config_file,'w')
@@ -469,12 +413,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                         SersicMainConstrain(constrain_file, i + 1) 
                     else:
                         SersicConstrain(constrain_file, i + 1)
-            if ParamDict[i + 1][1] == 'bar':
-                if RunNo + 1 == 1:
-                    pass
-                else:
-                    SersicFunc(config_file, ParamDict, FitDict, i+1)
-                    BarConstrain(constrain_file, i + 1)
             if ParamDict[i + 1][1] == 'expdisk':
                 ExpFunc(config_file, ParamDict, FitDict, i + 1)
                 if RunNo + 1 == 1:
@@ -483,7 +421,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     ExpdiskConstrain(constrain_file, i + 1)
             if  ParamDict[i + 1][1] == 'sky':
                 SkyFunc(config_file, ParamDict, FitDict, i+1) 
-#        print ParamDict
+        print ParamDict
         raw_input('Waiting >>> ')
 #        print 'Waiting'
         if exists('fit.log'):
@@ -495,6 +433,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             ParamDict = ReadLog(ParamDict, 2)
         else:
             ParamDict = ReadLog(ParamDict, 1)
-#        print ParamDict
+        print ParamDict
                         
 

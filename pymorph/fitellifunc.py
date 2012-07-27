@@ -43,14 +43,14 @@ def fit_elli(clus_id, line_s):
     if(eg<=0.05):
         eg = 0.07
     major_axis = float(values[14])#major axis of the object
-    iraf.imcopy(c.outdir +mask_file, c.outdir +'image'+str(mask_file)[8:]+'.pl')
+    iraf.imcopy(mask_file, 'image'+str(mask_file)[8:]+'.pl')
     run_elli(image_file, xcntr, ycntr, eg, pos_ang, major_axis)
 
 
-def run_elli(cutimage, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
+def run_elli(input, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
     """The function responsible for fit ellipse"""
-    EllGal = c.outdir +'GalEllFit.fits'
-    fEl = pyfits.open(c.datadir + cutimage)
+    EllGal = 'GalEllFit.fits'
+    fEl = pyfits.open(input)
     GaLaXy = fEl[0].data
     fEl.close()
     GaLaXy = GaLaXy - sky
@@ -74,7 +74,7 @@ def run_elli(cutimage, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background
     iraf.geompar.pa0=pa
     iraf.geompar.sma0=6.0
     iraf.geompar.minsma=0.1
-    iraf.geompar.maxsma=c.SexHalfRad*4.0
+    iraf.geompar.maxsma=sma*5.0
     iraf.geompar.step=0.1
     iraf.geompar.recente="no"
     iraf.geompar.xylearn="no"
@@ -103,13 +103,13 @@ def run_elli(cutimage, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background
                 TFLUX_E", rows="-", \
                 option="plain", align="yes", sp_col="", lgroup=0, Stdout=output)
     for myfile in ['ellip','err','test.tab', EllGal]:
-        if os.access(c.outdir +myfile,os.F_OK):
-            os.remove(c.outdir +myfile)
+        if os.access(myfile,os.F_OK):
+            os.remove(myfile)
 
-def run_elli_full(cutimage, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
+def run_elli_full(input, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
     """The function responsible for fit ellipse"""
-    EllGal = c.outdir +'GalEllFit.fits'
-    fEl = pyfits.open(c.datadir + cutimage)
+    EllGal = 'GalEllFit.fits'
+    fEl = pyfits.open(input)
     GaLaXy = fEl[0].data
     fEl.close()
     GaLaXy = GaLaXy - sky
@@ -163,5 +163,5 @@ def run_elli_full(cutimage, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,backg
 		A3_ERR, B3, B3_ERR, A4, A4_ERR, B4_ERR", rows="-", \
                 option="plain", align="yes", sp_col="", lgroup=0, Stdout=output)
     for myfile in ['ellip','err','test.tab', EllGal]:
-        if os.access(c.outdir +myfile,os.F_OK):
-            os.remove(c.outdir +myfile)
+        if os.access(myfile,os.F_OK):
+            os.remove(myfile)
