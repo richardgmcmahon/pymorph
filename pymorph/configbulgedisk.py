@@ -10,8 +10,6 @@ import copy
 import numpy.ma as ma
 from readlog import ReadLog
 from cosmocal import cal
-from flagfunc import *
-
 try:
     from utilities import WriteDbDetail
 except:
@@ -50,10 +48,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     if len(ComP) == 0:
         ComP = ['bulge', 'disk']
     values = line_s.split()
-    outfile   = 'O_' + c.fstring + '.fits'
-    mask_file = 'M_' + c.fstring + '.fits'
-    config_file = 'G_' + c.fstring + '.in' #Name of the GALFIT configuration file
-    constrain_file = c.fstring + '.con'
+    outfile   = 'O_' + str(cutimage)[:-5] + '.fits'
+    mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
+    config_file = 'G_' + str(cutimage)[:-5] + '.in' #Name of the GALFIT configuration file
+    constrain_file = str(cutimage)[:-5] + '.con'
     try:
 	c.center_constrain = c.center_constrain
     except:
@@ -261,7 +259,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             pass
     f_constrain.close()
 #    if isneighbour: No need to add flag again. configfunction add that
-#        c.Flag  += 2**GetFlag('NEIGHBOUR_FIT')
+#        c.Flag  += 4096
 #    print c.Flag 
     #Sky component
     ParamDict[0][AdComp] = {}
@@ -732,7 +730,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                 SkyNo = len(ParamDict[0]) #GalSky has to do better
                 c.GalSky = ParamDict[RunNo + 1][SkyNo][2]
             else:
-                c.Flag += 2**GetFlag('DETAIL_FAILED')
+                c.Flag += 2097152
                 SerIndArr = []
                 RePixArr = []
                 IeArr = []

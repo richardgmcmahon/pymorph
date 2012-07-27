@@ -7,7 +7,6 @@ from numpy import log10
 from readlog import ReadLog
 from runsexfunc import *
 import copy
-from flagfunc import *
 
 class ConfigIter:
     """The class making configuration file for GALFIT. The configuration file 
@@ -43,10 +42,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     if len(ComP) == 0:
         ComP = ['bulge', 'disk']
     values = line_s.split()
-    outfile   = 'O_' + c.fstring + '.fits'
-    mask_file = 'M_' + c.fstring + '.fits'
-    config_file = 'G_' + c.fstring + '.in' #Name of the GALFIT configuration file
-    constrain_file = c.fstring + '.con'
+    outfile   = 'O_' + str(cutimage)[:-5] + '.fits'
+    mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
+    config_file = 'G_' + str(cutimage)[:-5] + '.in' #Name of the GALFIT configuration file
+    constrain_file = str(cutimage)[:-5] + '.con'
     try:
 	c.center_constrain = c.center_constrain
     except:
@@ -139,7 +138,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     #Add components
     AdComp = 1
     if 'bulge' in ComP:
-        c.Flag += 2**GetFlag('FIT_BULGE')
+        c.Flag += 512
         ParamDict[0][AdComp] = {}
         #Bulge Parameters
         ParamDict[0][AdComp][1] = 'sersic'
@@ -154,7 +153,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         ParamDict[0][AdComp][11] = 'Main'
         AdComp += 1
     if 'disk' in ComP:
-        c.Flag += 2**GetFlag('FIT_DISK')
+        c.Flag += 1024
         #Disk parameters
         ParamDict[0][AdComp] = {}
         ParamDict[0][AdComp][1] = 'expdisk'
@@ -168,7 +167,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         ParamDict[0][AdComp][11] = 'Main'
         AdComp += 1
     if 'bar' in ComP:
-#        c.Flag += 2**GetFlag('FIT_DISK')
+#        c.Flag += 512
         ParamDict[0][AdComp] = {}
         #Bulge Parameters
         ParamDict[0][AdComp][1] = 'bar'
@@ -183,7 +182,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         ParamDict[0][AdComp][11] = 'Main'
         AdComp += 1
     if 'point' in ComP:
-#        c.Flag += 2**GetFlag('FIT_POINT')
+#        c.Flag += 512
         ParamDict[0][AdComp] = {}
         #Point Parameters
         ParamDict[0][AdComp][1] = 'psf'
@@ -243,7 +242,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             pass
     f_constrain.close()
     if isneighbour:
-        c.Flag  += 2**GetFlag('NEIGHBOUR_FIT')
+        c.Flag  += 4096
     #Sky component
     ParamDict[0][AdComp] = {}
     ParamDict[0][AdComp][1] = 'sky'

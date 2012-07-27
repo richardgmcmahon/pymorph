@@ -1,7 +1,7 @@
 """Configure file for PyMorph. Authors: Vinu Vikram, Yogesh Wadadekar and Ajit Kembhavi 2008"""
 ###----Specify the input images and Catalogues----###
-imagefile = '00000002_r_stamp.fits'
-whtfile = '00000002_r__r_W.fits'   #The weight image. If it contains the 
+imagefile = 'j8f643-1-1_drz_sci.fits'
+whtfile = 'j8f643-1-1_drz_rms.fits'   #The weight image. If it contains the 
                                       #string 'rms', this will treated as 
 				      #RMS_MAP and if it contains weight, then 
                                       #that will be treated as WEIGHT_MAP. 
@@ -9,7 +9,7 @@ whtfile = '00000002_r__r_W.fits'   #The weight image. If it contains the
 				      #is treated as MAP_RMS 
 sex_cata = 'sdss_sex.cat'           #The sextractor catalogue which has 
                                       #the format given in the file
-clus_cata = 'sdss_r.cat.field'         #catalogue of galaxies from
+clus_cata = 'sdss_r.cat'         #catalogue of galaxies from
                                       #online catalogu service
                                       #(name ra1 ra2 ra2 dec1 dec2 dec3)
 
@@ -69,7 +69,7 @@ angle = 180.0
 
 ###----Fitting modes----###
 repeat = False                        #Repeat the pipeline manually
-galcut = False                        #True if we provide cutouts
+galcut = True                        #True if we provide cutouts
 decompose = True
 detail = False #Detailed fitting
 galfit = True #Always keep this True as it is not functional yet!
@@ -87,10 +87,9 @@ devauc = False # set to False to fit sersic bulge, set to true to fit devacouler
 fitting = [1, 1, 1]                    # = 0, Fix params at SExtractor value
 
 ###----Set the SExtractor and GALFIT path here----###
-GALFIT_PATH ='/home/vinu/software/galfit/modified/galfit' 
-SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
-PYMORPH_PATH = '/home/vinu/vinucodes/serial_pipeline/trunk/pymorph'
-galfitv = '3.0.2'
+GALFIT_PATH ='/Users/ameert/galfit/modified/galfit' 
+SEX_PATH = '/sw/bin/sex'
+PYMORPH_PATH = '/Users/ameert/pymorph/trunk/pymorph'
 
 ###----The following conditions are used to classify fit goo/bad----###
 chi2sq = 2.5                          #< chi2sq

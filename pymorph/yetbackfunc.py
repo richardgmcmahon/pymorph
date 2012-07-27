@@ -3,7 +3,7 @@ import os
 import numpy as n
 import pylab as p
 import pyfits
-import pymconvolve
+import convolve as conv
 import numpy.ma as ma
 
 def QuarterMask(z, zm, xcntr, ycntr, bbya, pa, quarter):
@@ -36,7 +36,7 @@ def QuarterMask(z, zm, xcntr, ycntr, bbya, pa, quarter):
     zmm[n.where(zmm > 0)] = 1
     return n.median(ma.masked_array(z, zmm).compressed())
 
-def RunSegSex(gimg):
+def FindYetSky(gimg, X0, Y0):
     try:
         SEx_GAIN = c.SEx_GAIN 
     except:
@@ -45,6 +45,9 @@ def RunSegSex(gimg):
     SEx_FILTER_NAME = c.SEx_FILTER_NAME
     mag_zero = c.mag_zero 
     pymorph_path = c.PYMORPH_PATH
+    f = pyfits.open(gimg)
+    z = f[0].data
+    f.close()
     f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_seg.sex','r')
     template = f_tpl.read()
     f_tpl.close()
@@ -53,12 +56,6 @@ def RunSegSex(gimg):
     f_sex.close()
     cmd = c.SEX_PATH + ' ' + gimg + ' -c default_seg.sex > /dev/null'
     os.system(cmd)
-   
-def FindYetSky(gimg, X0, Y0):
-    RunSegSex(gimg)
-    f = pyfits.open(gimg)
-    z = f[0].data
-    f.close()
     f = pyfits.open('seg.fits')
     zm = f[0].data
     f.close()
@@ -77,8 +74,7 @@ def FindYetSky(gimg, X0, Y0):
             hr = n.float(v_s[9])
             sky = n.float(v_s[10])
             if n.abs(X0 - xcntr) < 5.0 and n.abs(Y0 - ycntr) < 5.0:
-               boxcar = np.reshape(np.ones(3 * 3), (3, 3))
-               zm = pymconvolve.Convolve(zm, boxcar)
+               zm = conv.boxcar(zm, (3, 3), mode='nearest')
                zm[n.where(zm > 0)] = 1
                SkyQua = []
                for ii in n.arange(1, 5): 
