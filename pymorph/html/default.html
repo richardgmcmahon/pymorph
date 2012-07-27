@@ -7,13 +7,13 @@
 <TABLE BORDER="0" align="center" cellspacing=1 width="100%%"> 
 <TR align="center" bgcolor="#CCFFFF">
 <TH> Image </TH> 
-<TD align="left">&nbsp;&nbsp;&nbsp;%(cutimage)s&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="http://nedwww.ipac.caltech.edu/cgi-bin/nph-objsearch?search_type=Near+Position+Search&amp;in_csys=Equatorial&amp;in_equinox=J2000.0&amp;lon=%(alpha_ned)sd&amp;lat=%(delta_ned)sd&amp;radius=0.5&amp;out_csys=Equatorial&amp;out_equinox=J2000.0&amp;obj_sort=Distance+to+search+center&amp;of=pre_text&amp;zv_breaker=30000.0&amp;list_limit=5&amp;img_stamp=YES&amp;z_constraint=Unconstrained&amp;ot_include=ANY&amp;nmp_op=ANY">NED</A></TD> 
+<TD align="left">&nbsp;&nbsp;&nbsp;%(cutimage)s&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="http://nedwww.ipac.caltech.edu/cgi-bin/nph-objsearch?search_type=Near+Position+Search&amp;in_csys=Equatorial&amp;in_equinox=J2000.0&amp;lon=%(alpha_ned)sd&amp;lat=%(delta_ned)sd&amp;radius=5.0&amp;out_csys=Equatorial&amp;out_equinox=J2000.0&amp;obj_sort=Distance+to+search+center&amp;of=pre_text&amp;zv_breaker=30000.0&amp;list_limit=5&amp;img_stamp=YES&amp;z_constraint=Unconstrained&amp;ot_include=ANY&amp;nmp_op=ANY">NED</A></TD> 
 <TH> RA </TH> 
 <TD align="left">&nbsp;&nbsp;&nbsp;%(alpha1)s %(alpha2)s %(alpha3)s</TD> 
 </TR> 
 <TR align="center" bgcolor="#99CCFF">
 <TH> Init. par. file </TH>
-<TD align="left">&nbsp;&nbsp;&nbsp;<a href="%(initial_conf)s">%(initial_conf)s</a></TD> 
+<TD align="left">&nbsp;&nbsp;&nbsp;%(initial_conf)s</TD> 
 <TH> Dec </TH>
 <TD align="left">&nbsp;&nbsp;&nbsp;%(delta1)s %(delta2)s %(delta3)s</TD> 
 </TR> 
@@ -46,17 +46,13 @@
 %(error_mesg4)s </TD></TR>
 <TR align="left"><TD>
 %(error_mesg5)s </TD></TR>
-<TR align="left"><TD>
-%(error_mesg6)s </TD></TR>
-<TR align="left"><TD>
-%(error_mesg7)s </TD></TR>
 </TABLE>
 </TD> 
 </TR> 
 </TABLE> 
 <TABLE BORDER="0" align="center" cellspacing=1 width="100%%"> 
 <TR align="center" bgcolor="#CCFFFF"> 
-<TH> Component <TH> Center (x) <TH> Center (y) <TH> Magnitude <TH> Scale Radius <br> (pixels) <TH> Scale Radius <br> (kpc) <TH> n <TH> Axis Ratio <TH> Position <br> Angle <TH> Boxy/Disky </TH> 
+<TH> Component <TH> Center (x) <TH> Center (y) <TH> Magnitude <TH> Scale Radius <br> (pixels) <TH> Scale Radius <br> (kpc) <TH> n <TH> Ellipticity <TH> Position <br> Angle <TH> Boxy/Disky </TH> 
 </TR> 
 %(Object_Sersic)s
 %(Object_Sersic_err)s

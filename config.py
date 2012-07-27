@@ -1,31 +1,16 @@
-"""Configure file for PyMorph. Authors: Vinu Vikram, Yogesh Wadadekar and Ajit Kembhavi (IUCAA) 2008, Alan Meert (UPenn)"""
+"""Configure file for PyMorph. Authors: Vinu Vikram, Yogesh Wadadekar and Ajit Kembhavi 2008"""
 ###----Specify the input images and Catalogues----###
 imagefile = 'j8f643-1-1_drz_sci.fits'
-whtfile = 'j8f643-1-1_drz_rms.fits'   #The weight image. If it contains the 
-                                      #string 'rms', this will treated as 
-				      #RMS_MAP and if it contains weight, then 
-                                      #that will be treated as WEIGHT_MAP. 
-				      #If nothing found, then by default it 
-				      #is treated as MAP_RMS 
+whtfile = 'j8f643-1-1_drz_rms.fits'   #The weight image. 
 sex_cata = 'j8f643_sex.cat'           #The sextractor catalogue which has 
                                       #the format given in the file
 clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
                                       #online catalogu service
                                       #(name ra1 ra2 ra2 dec1 dec2 dec3)
 
-datadir = '/data2/home/ameert/sdss_sample/fit_data/' 
-				       #the directory containing input images
-                                       #if commented out, then program uses
-                                       # current directory
-
 ###----Specify the output names of images and catalogues----###
 out_cata = 'cl1216-1201_out.cat'      #catalogue of galaxies in the field
 rootname = 'j8f643'
-
-outdir = '/data2/home/ameert/sdss_sample/fits_out/dev/1/'  
-					#the directory containing output data
-                                        #if commented out, then program uses
-                                        # current directory
 
 ###----Psf list----###
 psfselect = 0                         #0 => No psfselection
@@ -81,18 +66,13 @@ angle = 180.0
 repeat = False                        #Repeat the pipeline manually
 galcut = False                        #True if we provide cutouts
 decompose = True
-detail = False #Detailed fitting
 galfit = True #Always keep this True as it is not functional yet!
 cas = True
 findandfit = 0
-maglim = [22, 15] #if findandfit= 1, then maglim = [faint_mag, bright_mag]
-stargal = 0.8 #Star-galaxy classification 
 crashhandler = 1
 
 ###---Galfit Controls---###
-components = ['bulge', 'disk']        #The components to be fitted to the object
-devauc = False # set to False to fit sersic bulge, set to true to fit devacouler's bulge (n = 4)
-
+components = ['bulge', 'disk']        #The components to be fitted to the objec
 ###---fixing = [bulge_center, disk_center, sky]
 fitting = [1, 1, 0]                    # = 0, Fix params at SExtractor value
 
@@ -100,18 +80,8 @@ fitting = [1, 1, 0]                    # = 0, Fix params at SExtractor value
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
 SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
 PYMORPH_PATH = '/home/vinu/serial_pipeline/trunk/pymorph'
-galfitv = '3.0.2'
 
 ###----The following conditions are used to classify fit goo/bad----###
 chi2sq = 1.9                          #< chi2sq
 Goodness = 0.60                       #> Goodness
 center_deviation = 3.0                #< abs(center - fitted center)
-center_constrain = 2.0                #Keep center within +/- center_constrain
-
-###----Database Informations----###
-host = 'localhost'
-database = 'Cluster'
-table = 'cluster'
-usr = 'vinu'
-pword = 'cluster'
-dbparams = ['Cluster:cl1216-1201', 'ObsID:1:int']

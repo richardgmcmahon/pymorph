@@ -46,7 +46,7 @@ def gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
     ty = (xcntr - 1.0 -x) * si + (y - ycntr + 1.0) * co
     R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
     tmp_mask = n.zeros((NXPTS, NYPTS))
-    f = pyfits.open(c.datadir + cutimage)
+    f = pyfits.open(cutimage)
     galaxy = f[0].data
     f.close()
     galaxy = n.swapaxes(galaxy, 0, 1)
@@ -104,13 +104,8 @@ def gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
                     z[n.where(R<=mask_reg*maj_axis)] = 1
         except:
             pass
-    if c.NoMask:
-        z[n.where(z > 0)] = 0
-    elif c.NormMask:
-        pass
-    else:
-        z = z + tmp_mask
-        z[n.where(z > 0)] = 1
+    z = z + tmp_mask
+    z[n.where(z > 0)] = 1
     z = im.binary_dilation(z, iterations=2)
     z = im.binary_fill_holes(z)
     hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
