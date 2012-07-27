@@ -1,11 +1,9 @@
 import os
 import sys
 import pyfits
-from os.path import exists
-import numpy as np
-from flagfunc import GetFlag, isset
 import config as c
-import traceback
+from os.path import exists
+
 
 class ConfigFunc:
     """The class making configuration file for GALFIT. The configuration file 
@@ -15,122 +13,40 @@ class ConfigFunc:
        The initial value for Sersic index 'n' is 4.The configuration file has 
        the name G_string(galid).in. The output image has the name 
        O_string(galid).fits"""
-    def __init__(self, cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_cata):
+    def __init__(self, cutimage, whtimage, size, line_s, psffile):
         self.cutimage = cutimage
         self.line_s  = line_s
 	self.whtimage = whtimage
-        self.xcntr = xcntr
-        self.ycntr = ycntr
-        self.NXPTS = NXPTS
-        self.NYPTS = NYPTS 
-        self.psffile = psffile
-        self.conff    = conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_cata)
+        self.size = size
+        self.conf    = conf(cutimage, whtimage, size, line_s, psffile)
 		
 
-def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_cata):
+def conf(cutimage, whtimage, size, line_s, psffile):
     imagefile = c.imagefile
+    sex_cata = c.sex_cata
     threshold = c.threshold
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg
-    try:
-        ComP = c.components 
-    except:
-        ComP = ['bulge', 'disk']
-    if len(ComP) == 0:
-        ComP = ['bulge', 'disk']
     values = line_s.split()
-    outfile   = 'O_' + c.fstring + '.fits'
-    mask_file = 'M_' + c.fstring + '.fits'
-    config_file = 'G_' + c.fstring + '.in' #Name of the GALFIT configuration file
-    constrain_file = c.fstring + '.con'
-    try:
-	c.center_constrain = c.center_constrain
-    except:
-	c.center_constrain = 2.0
+    outfile   = 'O_' + str(cutimage)[:-5] + '.fits'
+    mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
+    config_file = 'G_' + str(cutimage)[:-5] + '.in' #Name of the GALFIT configuration file
+    constrain_file = str(cutimage)[:-5] + '.con'
     if exists(constrain_file):
-        MakeConstrain = 0
+        pass
     else:
-        f_constrain = open(constrain_file, 'w')
-        cO = 1
-        MakeConstrain = 1
-        for Co in ComP:
-            if Co == 'bulge':
-                f_constrain.write(str(cO) + '      n      ' + str(c.LN) + \
-                        ' to ' + str(c.UN) +  '\n')
-                if c.center_deviated:
-                    f_constrain.write(str(cO) + '      x      -' + \
-                    str(c.center_deviation - c.center_deviation / 4.0) + \
-		    '     ' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
-                    f_constrain.write(str(cO) + '      y      -' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + \
-		    '     ' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
-                else:
-                    f_constrain.write(str(cO) + '      x      ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
-                    f_constrain.write(str(cO) + '      y      ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
-                f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
-                        ' to ' + str(c.LMag) + '\n')
-                f_constrain.write(str(cO) + '      re     ' + str(c.LRe) +\
-                        ' to ' + str(c.URe) + '\n')
-                f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
-                f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
-            if Co == 'disk':
-                # we want to force bulge and disk to share same center
-                #f_constrain.write('1-2     x      -0.001 to 0.001\n')
-                #f_constrain.write('1-2     y      -0.001 to 0.001\n')
-                if c.center_deviated:
-                    f_constrain.write(str(cO) + '      x      -' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + \
-		    '     ' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
-                    f_constrain.write(str(cO) + '      y      -' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + \
-		    '     ' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
-                else:
-                    f_constrain.write(str(cO) + '       x       ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
-                    f_constrain.write(str(cO) + '       y       ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
-                f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
-                        ' to ' + str(c.LMag) + '\n')
-                f_constrain.write(str(cO) + '      rs     ' + str(c.LRd) + \
-                        ' to ' + str(c.URd) + '\n')
-                f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
-                f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
-            if Co == 'point':
-                f_constrain.write(str(cO) + '       x       -2.0      2.0\n')
-                f_constrain.write(str(cO) + '       y       -2.0      2.0\n')
-            if Co == 'bar':
-                f_constrain.write(str(cO) + '      n      ' + str('0.1') + \
-                        ' to ' + str('2.2') +  '\n')
-                if c.center_deviated:
-                    f_constrain.write(str(cO) + '      x      -' + \
-                    str(c.center_deviation - c.center_deviation / 4.0) + \
-		    '     ' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
-                    f_constrain.write(str(cO) + '      y      -' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + \
-		    '     ' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
-                else:
-                    f_constrain.write(str(cO) + '      x      ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
-                    f_constrain.write(str(cO) + '      y      ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
-                f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
-                        ' to ' + str(c.LMag) + '\n')
-                f_constrain.write(str(cO) + '      re     ' + str(c.LRe) +\
-                        ' to ' + str(c.URe) + '\n')
-                f_constrain.write(str(cO) + '      q       0.0 to 0.5\n')
-                f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
-
-            cO += 1
+        f_constrain = open(constrain_file,'w')
+        f_constrain.write('1        n        0.2 to 20.0  \n')
+        f_constrain.write('1        x        -4.0      4.0\n')
+        f_constrain.write('1        y        -4.0      4.0\n')
+        f_constrain.write('2        x        -4.0      4.0\n')
+        f_constrain.write('2        y        -4.0      4.0\n')
         f_constrain.close()
-    if c.center_deviated:
-        c.center_deviated = 0
     f=open(config_file,'w')
-    xcntr_o  = xcntr * 1.0 #float(values[1]) #x center of the object
-    ycntr_o  = ycntr * 1.0 # float(values[2]) #y center of the object
-#    xcntr = size/2.0 + 1.0 + xcntr_o - int(xcntr_o)
-#    ycntr = size/2.0 + 1.0 + ycntr_o - int(ycntr_o)
+    xcntr_o  = float(values[1]) #x center of the object
+    ycntr_o  = float(values[2]) #y center of the object
+    xcntr = size/2.0 + 1.0 + xcntr_o - int(xcntr_o)
+    ycntr = size/2.0 + 1.0 + ycntr_o - int(ycntr_o)
     mag    = float(values[7]) #Magnitude
     radius = float(values[9]) #Half light radius
     mag_zero = c.mag_zero #magnitude zero point
@@ -141,13 +57,13 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
     major_axis = float(values[14])	#major axis of the object
     #Write configuration file
     f.write('# IMAGE PARAMETERS\n')
-    f.writelines(['A) ', c.datadir + str(cutimage), '	# Input data image',\
+    f.writelines(['A) ', str(cutimage), '	# Input data image',\
                   ' (FITS file)\n'])
     f.writelines(['B) ', str(outfile), '		# Name for',\
                   ' the output image\n'])
-    f.writelines(['C) ', c.datadir + str(whtimage), '		# Noise image name', \
+    f.writelines(['C) ', str(whtimage), '		# Noise image name', \
                   ' (made from data if blank or "none")\n'])
-    f.writelines(['D) ', c.datadir + str(psffile), '			# Input PSF', \
+    f.writelines(['D) ', str(psffile), '			# Input PSF', \
                   ' image for convolution (FITS file)\n'])
     f.writelines(['E) 1			# PSF oversampling factor relative',
                   ' to data\n'])
@@ -155,12 +71,9 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
                   ' mask(FITS image or ASCII coord list)\n'])
     f.writelines(['G) ', str(constrain_file), '       # File with parameter',\
                   ' constraints (ASCII file)\n'])
-    f.writelines(['H) 1 ', str(NXPTS), ' 1 ', str(NYPTS), '		#',\
+    f.writelines(['H) 1 ', str(size), ' 1 ', str(size), '		#',\
                   ' Image region to fit (xmin xmax ymin ymax)\n'])
-    #f.writelines(['I) ', str(NXPTS), ' ', str(NYPTS),	'		#',\
-    #              ' Size of convolution box (x y)\n'])
-    # This really shouldn't be hardcoded!!!!
-    f.writelines(['I) ', str(100), ' ', str(100),	'		#',\
+    f.writelines(['I) ', str(size), ' ', str(size),	'		#',\
                   ' Size of convolution box (x y)\n'])
     f.writelines(['J) ', str(mag_zero), '		# Magnitude',\
                   ' photometric zeropoint\n'])
@@ -170,136 +83,38 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
                   ' (1=yes; 0=optimize)\n'])
     f.writelines(['S) 0			# Modify/create',\
                  ' objects interactively?\n\n\n'])
-    if 'bulge' in ComP:
-        f.write('# Sersic function\n\n')
-        f.writelines([' 0) sersic		# Object type\n'])
-        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' ', \
-                      str(c.fitting[0]), ' ', str(c.fitting[0]), '   #',\
-                      ' position x, y [pixel]\n'])
-        f.writelines([' 3) ', str(mag), ' 1		# total magnitude\n'])
-        f.writelines([' 4) ', str(radius), ' 1		# R_e [Pixels]\n'])
-        f.writelines([' 5) 4.0 ', str(int(not c.devauc)) ,\
-                      '		#Sersic exponent (deVauc=4, expdisk=1)\n'])
-        if np.float(c.galfitv.split('.')[0]) >= 3.0:
-            f.writelines([' 9) ', str(axis_rat), ' 1		', \
-                          '# axis ratio (b/a)\n'])
-            f.writelines([' 10) ', str(pos_ang), ' 1		',\
-                          '# position angle (PA)',\
-                          '[Degrees: Up=0, Left=90]\n'])
-            f.writelines([' Z) 0 			# output image',\
-                      ' (see above)\n\n\n']) 
-        else:
-            f.writelines([' 8) ', str(axis_rat), ' 1		',\
-                          '# axis ratio (b/a)\n'])
-            f.writelines([' 9) ', str(pos_ang), ' 1		',\
-                          '# position angle (PA)',\
-                          '[Degrees: Up=0, Left=90]\n'])
-            if c.bdbox or c.bbox:
-                f.writelines(['10) 0.0 1		# diskiness (< 0) or ' \
-                              'boxiness (> 0)\n'])
-            else:
-                f.writelines(['10) 0.0 0            # diskiness (< 0) or ' \
-	                      'boxiness (> 0)\n'])
-            f.writelines([' Z) 0 			# output image',\
-                          ' (see above)\n\n\n']) 
-        c.Flag += 2**GetFlag('FIT_BULGE')
-    if 'disk' in ComP:
-        f.writelines(['# Exponential function\n\n'])
-        f.writelines([' 0) expdisk 		# Object type\n'])
-        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' ', \
-                      str(c.fitting[1]), ' ', str(c.fitting[1]), '    #',\
-                      ' position x, y [pixel]\n'])
-        f.writelines([' 3) ', str(mag), ' 1     	# total magnitude\n'])
-        f.writelines([' 4) ', str(radius), ' 1 		# R_e [Pixels]\n'])
-        if np.float(c.galfitv.split('.')[0]) >= 3.0:
-            f.writelines([' 9) ', str(axis_rat), ' 1		', \
-                          '# axis ratio (b/a)\n'])
-            f.writelines([' 10) ', str(pos_ang), ' 1		',\
-                          '# position angle (PA)',\
-                          '[Degrees: Up=0, Left=90]\n'])
-            f.writelines([' Z) 0 			# output image',\
-                      ' (see above)\n\n\n']) 
-        else:
-            f.writelines([' 8) ', str(axis_rat), ' 1		',\
-                          '# axis ratio (b/a)\n'])
-            f.writelines([' 9) ', str(pos_ang), ' 1		',\
-                          '# position angle (PA)',\
-                          '[Degrees: Up=0, Left=90]\n'])
-            if c.bdbox or c.bbox:
-                f.writelines(['10) 0.0 1		# diskiness (< 0) or ' \
-                              'boxiness (> 0)\n'])
-            else:
-                f.writelines(['10) 0.0 0            # diskiness (< 0) or ' \
-	                      'boxiness (> 0)\n'])
-            f.writelines([' Z) 0 			# output image',\
-                          ' (see above)\n\n\n']) 
-        c.Flag += 2**GetFlag('FIT_DISK')
-#    if 'point' in ComP:
-#        gmag = mag + 2.5 * np.log10(2.0)
-#        f.writelines(['# Gaussian function\n\n'])
-#        f.writelines([' 0) gaussian              # Object type\n'])
-#        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1  #',\
-#                      ' position x, y [pixel]\n'])
-#        f.writelines([' 3) ', str(gmag), ' 1             # total magnitude\n'])
-#        f.writelines([' 4) 0.50 0             #FWHM\n'])
-#        f.writelines([' 8) 1 0     # axis ratio (b/a)\n'])
-#        f.writelines([' 9) 10.0 0                 # position '\
-#                      'angle(PA) [Degrees: Up=0, Left=90]\n'])
-#        f.writelines(['10) 0.0 0                # diskiness (< 0) or '\
-#                      'boxiness (> 0)\n'])
-#        f.writelines([' Z) 0                    # output image '\
-#                      '(see above)\n\n\n'])
-#        c.Flag += 2**GetFlag('FIT_POINT')
-
-    if 'point' in ComP:
-        pmag = mag + 2.5 * np.log10(6.0)
-        f.writelines(['#point source\n\n'])
-        f.writelines([' 0) psf              # Object type\n'])
-        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1  #',\
-                      ' position x, y [pixel]\n'])
-        f.writelines([' 3) ', str(pmag), ' 1             # total magnitude\n'])
-        f.writelines([' Z) 0                    # output image '\
-                      '(see above)\n\n\n'])
-        c.Flag += 2**GetFlag('FIT_POINT')
-
-#### BAR COMPONENT IMPLIMENTATION ####
-    if 'bar' in ComP:
-        barmag = mag + 2.5 * np.log10(3.0)
-        f.write('# Sersic function for bar\n\n')
-        f.writelines([' 0) sersic		# Object type\n'])
-        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' ', \
-                      str(c.fitting[3]), ' ', str(c.fitting[3]), '   #',\
-                      ' position x, y [pixel]\n'])
-        f.writelines([' 3) ', str(barmag), ' 1		# total magnitude\n'])
-        f.writelines([' 4) ', str(radius), ' 1		# R_e [Pixels]\n'])
-        f.writelines([' 5) 0.5 1		#Sersic exponent',\
-                      ' (deVauc=4, expdisk=1)\n'])
-        f.writelines([' 8) ', str('0.3'), ' 1	# axis ratio (b/a)\n'])
-        f.writelines([' 9) ', str(pos_ang), ' 1		# position angle (PA)',\
-                      '[Degrees: Up=0, Left=90]\n'])
-        f.writelines(['10) 0.0 0		# diskiness (< 0) or ' \
-                      'boxiness (> 0)\n'])
-        f.writelines([' Z) 0 			# output image',\
-                      ' (see above)\n\n\n']) 
-#        c.Flag += 2**GetFlag('FIT_BULGE')
- 
+    f.write('# Sersic function\n\n')
+    f.writelines([' 0) sersic		# Object type\n'])
+    f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1	#',\
+                  ' position x, y [pixel]\n'])
+    f.writelines([' 3) ', str(mag), ' 1		# total magnitude\n'])
+    f.writelines([' 4) ', str(radius), ' 1		# R_e [Pixels]\n'])
+    f.writelines([' 5) 4.0 1		#Sersic exponent',\
+                  ' (deVauc=4, expdisk=1)\n'])
+    f.writelines([' 8) ', str(axis_rat), ' 1	# axis ratio (b/a)\n'])
+    f.writelines([' 9) ', str(pos_ang), ' 1		# position angle (PA)',\
+                  '[Degrees: Up=0, Left=90]\n'])
+    f.writelines(['10) 0.0 0		# diskiness (< 0) or boxiness (> 0)\n'])
+    f.writelines([' Z) 0 			# output image',\
+                  ' (see above)\n\n\n']) 
+    f.writelines(['# Exponential function\n\n'])
+    f.writelines([' 0) expdisk 		# Object type\n'])
+    f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1  #',\
+                  ' position x, y [pixel]\n'])
+    f.writelines([' 3) ', str(mag), ' 1     	# total magnitude\n'])
+    f.writelines([' 4) ', str(radius), ' 1 		# R_e [Pixels]\n'])
+    f.writelines([' 8) ', str(axis_rat), ' 1     # axis ratio (b/a)\n'])
+    f.writelines([' 9) ', str(pos_ang), ' 1         	# position angle(PA) \
+                 [Degrees: Up=0, Left=90]\n'])
+    f.writelines(['10) 0.0 0         	# diskiness (< 0) or boxiness (> 0)\n']) 
+    f.writelines([' Z) 0             	# output image (see above)\n\n\n'])
     f.writelines(['# sky\n\n']) 
-    f.writelines([' 0) sky\n'])#str(2.22604*(1.0+0.01)), ' ', str(0.0)
-#    f.writelines([' 1) ', str(2.41154*(1.0+0.01)),' ', str(c.fitting[2]), \
-#                  '	# sky background [ADU counts\n'])
-    f.writelines([' 1) ', str(c.SexSky),' ', str(c.fitting[2]), \
-                  '	# sky background [ADU counts\n'])
-#    f.writelines([' 1) ', str(0.0), ' ', str(c.fitting[2]), \
-#                  '	# sky background [ADU counts\n'])
-#    f.writelines([' 1) ', str(c.SkyMin), '      ', str(c.fitting[2]), \
-#                  '	# sky background [ADU counts\n'])
+    f.writelines([' 0) sky\n'])
+    f.writelines([' 1) ', str(sky), ' 0	# sky background [ADU counts\n'])
     f.writelines([' 2) 0.000      0       # dsky/dx (sky gradient in x)\n',\
                   ' 3) 0.000      0       # dsky/dy (sky gradient in y)\n',\
                   ' Z) 0                  # output image\n\n\n'])
     f.writelines(['# Neighbour sersic function\n\n'])
-    isneighbour = 0
-    f_constrain = open(constrain_file, 'ab')
-    
     for line_j in open(sex_cata,'r'):
         try:
             values = line_j.split()
@@ -312,18 +127,21 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
             axis_rat = 1.0/float(values[12]) #axis ration b/a
             area_n = float(values[13]) # neighbour area
             maj_axis = float(values[14])#major axis of neighbour
-            NotFitNeigh = 0
-            if abs(xcntr_n - xcntr_o) > NXPTS / 2.0 + c.avoidme or \
-               abs(ycntr_n - ycntr_o) > NYPTS / 2.0 + c.avoidme:
-                NotFitNeigh = 1
             if(abs(xcntr_n - xcntr_o) <= (major_axis + maj_axis) * \
                threshold and \
                abs(ycntr_n - ycntr_o) <= (major_axis  + maj_axis) * \
                threshold and area_n >= thresh_area * area_o and \
-               abs(xcntr_n - xcntr_o) > 5.0  and \
-               abs(ycntr_n - ycntr_o) > 5.0 and NotFitNeigh == 0):
+               xcntr_n != xcntr_o and ycntr_n != ycntr_o):
+                if((xcntr_o - xcntr_n) < 0):
+                    xn = xcntr + abs(xcntr_n - xcntr_o)
+                if((ycntr_o - ycntr_n) < 0):
+                    yn = ycntr + abs(ycntr_n - ycntr_o)
+                if((xcntr_o - xcntr_n) > 0):
+                    xn = xcntr - (xcntr_o - xcntr_n)
+                if((ycntr_o - ycntr_n) > 0):
+                    yn = ycntr - (ycntr_o - ycntr_n)
                 f.writelines([' 0) sersic               # Object type\n'])
-                f.writelines([' 1) ', str(xcntr_n), ' ', str(ycntr_n), \
+                f.writelines([' 1) ', str(xn), ' ', str(yn), \
                              ' 1 1  # position x, y [pixel]\n'])
                 f.writelines([' 3) ', str(mag), ' 1     	#',\
                               ' total magnitude\n'])
@@ -331,39 +149,18 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
                                '# R_e [Pixels]\n'])
                 f.writelines([' 5) 4.0 1        	#Sersic exponent', \
                               ' (deVauc=4, expdisk=1)\n'])
-                if np.float(c.galfitv.split('.')[0]) >= 3.0:
-                    f.writelines([' 9) ', str(axis_rat), ' 1        # axis',\
-                                  ' ratio (b/a)\n'])
-                    f.writelines([' 10) ', str(pos_ang), ' 1 	       ',\
-                                  ' # position angle (PA)  [Degrees: Up=0,'\
-                                  ' Left=90]\n'])
-                    f.writelines([' Z) 0 	           	# output',\
-                                  ' image (see above)\n\n\n'])
-                else:
-                    f.writelines([' 8) ', str(axis_rat), ' 1        # axis',\
-                                  ' ratio (b/a)\n'])
-                    f.writelines([' 9) ', str(pos_ang), ' 1 	       ',\
-                                  ' # position angle (PA)  [Degrees: Up=0,'\
-                                  ' Left=90]\n'])
-                    f.writelines(['10) 0.0 0         	# diskiness',\
-                                  ' (< 0) or boxiness (> 0)\n'])
-                    f.writelines([' Z) 0 	           	# output',\
-                                  ' image (see above)\n\n\n'])
-                if MakeConstrain:
-                    f_constrain.write(str(cO) + '      n      0.02 to 20.0  \n')
-                    f_constrain.write(str(cO) + '     mag    -100.0 to 100.0\n')
-                    f_constrain.write(str(cO) + '      re      0.0 to 500.0\n')
-                    f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
-                    f_constrain.write(str(cO) + '      pa    -360.0 to 360.0\n')
-                    cO += 1
-                isneighbour = 1
+                f.writelines([' 8) ', str(axis_rat), ' 1        # axis',\
+                              ' ratio (b/a)\n'])
+                f.writelines([' 9) ', str(pos_ang), ' 1 	       ',\
+                              ' # position angle (PA)  [Degrees: Up=0,'\
+                                ' Left=90]\n'])
+                f.writelines(['10) 0.0 0         	# diskiness',\
+                              ' (< 0) or boxiness (> 0)\n'])
+                f.writelines([' Z) 0 	           	# output',\
+                              ' image (see above)\n\n\n'])
         except:
             pass
-
-    f_constrain.close()
     f.close()
-    if isneighbour:
-        c.Flag  += 2**GetFlag('NEIGHBOUR_FIT')
 #    f_fit = open('fit2.log','a')
 #    if exists('fit.log'):
 #        os.system('rm fit.log')
